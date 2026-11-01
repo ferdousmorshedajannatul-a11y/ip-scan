@@ -9,24 +9,25 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
+      - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      - name: Set up Java
+      - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
+          distribution: 'temurin'
           java-version: '17'
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-
-      - name: Create Clean Flutter Project
+      - name: Install Flutter Manually
         run: |
-          mkdir build_app
-          cd build_app
+          git clone https://github.com/flutter/flutter.git -b stable --depth 1 $HOME/flutter
+          echo "$HOME/flutter/bin" >> $GITHUB_PATH
+
+      - name: Build Android App
+        run: |
+          export PATH="$HOME/flutter/bin:$PATH"
+          mkdir workspace
+          cd workspace
           flutter create --org com.netscanner netscanner_app
           cd netscanner_app
           cp -f ../../app_main.dart lib/main.dart
@@ -35,7 +36,7 @@ jobs:
           flutter build apk --release
           cp build/app/outputs/flutter-apk/app-release.apk ../../app-release.apk
 
-      - name: Upload APK Artifact
+      - name: Upload Finished APK
         uses: actions/upload-artifact@v4
         with:
           name: NetScanner-APK
