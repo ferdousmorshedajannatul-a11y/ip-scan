@@ -9,10 +9,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
       - name: Set up Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
@@ -22,24 +23,20 @@ jobs:
         with:
           channel: 'stable'
 
-      - name: Create Base Project Structure
+      - name: Create Clean Flutter Project
         run: |
-          flutter create --org com.netscanner .
-          cp -f app_main.dart lib/main.dart
-
-      - name: Install Dependencies
-        run: |
+          mkdir build_app
+          cd build_app
+          flutter create --org com.netscanner netscanner_app
+          cd netscanner_app
+          cp -f ../../app_main.dart lib/main.dart
           flutter pub add http url_launcher
-
-      - name: Add Internet Permission
-        run: |
           sed -i '/<application/i <uses-permission android:name="android.permission.INTERNET"\/>' android/app/src/main/AndroidManifest.xml
-
-      - name: Build APK
-        run: flutter build apk --release
+          flutter build apk --release
+          cp build/app/outputs/flutter-apk/app-release.apk ../../app-release.apk
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: NetScanner-APK
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: app-release.apk
